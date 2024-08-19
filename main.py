@@ -118,8 +118,16 @@ class EventTime:
         return self._time
 
     @property
+    def num_invited(self):
+        return len(self._available) + len(self._not_available)
+
+    @property
     def available(self):
         return self._available
+
+    @property
+    def num_available(self):
+        return len(self._available)
 
     @property
     def not_available(self):
@@ -241,13 +249,13 @@ def main():
     # load attendees
     attendees = load_availability('availability.txt')
 
-    # evaluate 15 min time blocks
+    # evaluate 1 hour time blocks
     time_blocks = []
     for day in (Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY):
         for start_hour in range(8, 17):
-            for start_min in (0, 0.25, 0.5, 0.75):
+            for start_min in (0,):
                 start = start_hour + start_min
-                end = start + 0.25
+                end = start + 1
                 event = EventTime(day=day, start=start, end=end)
                 for person in attendees:
                     event.add_attendee(person)
@@ -263,13 +271,12 @@ def main():
             combined.append(current)
             current = block
 
-    print(f'time blocks: {len(time_blocks)}, combined: {len(combined)}')
-
-    test = combined[0]
-    print(f'{test.time}:')
-    print('Available: ')
-    for n in test.available:
-        print(f' - {n}')
+    by_attendees = sorted(combined, key=lambda x: x.num_available, reverse=True)
+    by_length = sorted(by_attendees, key=lambda x: x.time.end - x.time.start, reverse=True)
+    for block in by_attendees[:5]:
+        print(f'{block.time} ({block.num_available} of {block.num_invited} available):')
+        print(' - Available:', ', '.join(sorted(block.available)))
+        print(' - Unavailable:', ', '.join(sorted(block.not_available)))
 
 
 if __name__ == '__main__':
