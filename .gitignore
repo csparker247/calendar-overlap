@@ -2,3 +2,4 @@
 venv/
 .venv/
 *.txt
+__pycache__/*
