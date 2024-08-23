@@ -3,7 +3,7 @@ from typing import Union, List
 
 from lark import Lark, Transformer
 
-from classes import TimeSpan, Attendee
+from avail.classes import TimeSpan, Attendee
 
 _AVAIL_GRAMMAR = r"""
 
@@ -12,9 +12,9 @@ _AVAIL_GRAMMAR = r"""
 _entries: entry [_NL _entries*]
 entry : name list_of_availability
 
-name : /.*?;/
+name : /.*?:/
 
-list_of_availability : availability (";" availability)*
+list_of_availability : availability ("," availability)*
 availability : day timerange
 timerange : start_time"-"end_time
 start_time: _timestamp
@@ -52,7 +52,7 @@ _NL: /(\r?\n[\t ]*)+/
 """
 
 
-class AvailFileTransformer(Transformer):
+class _AvailFileTransformer(Transformer):
     def entry(self, entry):
         name, availability = entry
         availability = [TimeSpan(*a) for a in availability]
@@ -93,16 +93,17 @@ class AvailFileTransformer(Transformer):
         return hour + ":" + minute
 
 
-def load_availability(path: Union[str, Path]) -> List[Attendee]:
+def load_file(path: Union[str, Path]) -> List[Attendee]:
     if isinstance(path, str):
         path = Path(path)
 
-    # read file
+    # read and parse file
     parser = Lark(_AVAIL_GRAMMAR, start='start')
     with path.open() as f:
         parsed = parser.parse(f.read())
-    parsed = AvailFileTransformer().transform(parsed)
+    parsed = _AvailFileTransformer().transform(parsed)
 
+    # convert parsed entries to attendees
     attendees = {}
     for name, availability in parsed.children:
         if name in attendees.keys():
@@ -116,14 +117,3 @@ def load_availability(path: Union[str, Path]) -> List[Attendee]:
             attendee.add_availability(ts)
 
     return list(attendees.values())
-
-
-def print_availability(attendees: List[Attendee]):
-    for person in attendees:
-        print(f'{person.name}:')
-        for day_spans in person.availability().values():
-            if len(day_spans) == 0:
-                continue
-            day = day_spans[0].day
-            print(f' - {day.name.title()}:', ', '.join(
-                [f'{span.start_str}-{span.end_str}' for span in day_spans]))
