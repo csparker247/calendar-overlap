@@ -1,6 +1,6 @@
 from copy import deepcopy
 from enum import Enum
-from typing import Union, Self, Set
+from typing import Union, Self, Set, Iterable, Tuple
 
 
 class Day(Enum):
@@ -34,6 +34,11 @@ def str_to_day(s: str) -> Day:
 def str_to_time(s: str) -> float:
     h, _, m = s.partition(':')
     return float(h) + float(m) / 60
+
+
+def time_to_int(time: float) -> Tuple[int, int]:
+    i, d = divmod(time, 1)
+    return int(i), int(d * 60)
 
 
 class TimeSpan:
@@ -83,6 +88,10 @@ class TimeSpan:
         return f'{int(si):02}:{int(sd * 60):02}'
 
     @property
+    def start_int(self):
+        return time_to_int(self._start)
+
+    @property
     def end(self):
         return self._end
 
@@ -90,6 +99,10 @@ class TimeSpan:
     def end_str(self):
         ei, ed = divmod(self._end, 1)
         return f'{int(ei):02}:{int(ed * 60):02}'
+
+    @property
+    def end_int(self):
+        return time_to_int(self._end)
 
     def contains(self, span: Self) -> bool:
         if span._day != self._day:
@@ -190,8 +203,13 @@ class Person:
         self._availability[span.day].append(span)
         self._availability[span.day].sort(key=lambda x: x.start)
 
-    def availability(self):
-        return self._availability
+    def availability_by_block(self) -> Iterable[TimeSpan]:
+        for day in self._availability.values():
+            for span in day:
+                yield span
+
+    def availability_by_day(self):
+        return self._availability.values()
 
     def is_available(self, span: Union[TimeSpan, EventTime]) -> bool:
         if isinstance(span, EventTime):
