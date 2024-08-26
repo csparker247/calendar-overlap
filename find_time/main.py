@@ -63,7 +63,7 @@ def main():
         blocks = sorting[sort_type](blocks)
 
     # print all blocks
-    if args.nprint <= 0:
+    if args.nprint < 0:
         args.nprint = None
 
     # print time blocks
