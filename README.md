@@ -2,6 +2,7 @@
 A simple tool for finding regular availability overlaps between event invitees.
 
 ## Usage
+This project is available on [PyPI](https://pypi.org/project/find-time/):
 ```shell
 python -m pip install find-time
 
