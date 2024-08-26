@@ -136,13 +136,13 @@ class EventTime:
     def not_available(self):
         return self._not_available
 
-    def add_attendee(self, attendee, is_available: bool = None):
+    def add_person(self, person, is_available: bool = None):
         if is_available is None:
-            is_available = attendee.is_available(self.time)
+            is_available = person.is_available(self.time)
         if is_available:
-            self._available.add(attendee.name)
+            self._available.add(person.name)
         else:
-            self._not_available.add(attendee.name)
+            self._not_available.add(person.name)
 
     def can_combine(self, event_time: Self) -> bool:
         if self._time.end != event_time.time.start and self._time.start != event_time.time.end:
@@ -161,7 +161,7 @@ class EventTime:
         return event
 
 
-class Attendee:
+class Person:
     _availability = None
 
     def __init__(self, name: str):

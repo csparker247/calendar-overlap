@@ -3,7 +3,7 @@ from typing import Union, List
 
 from lark import Lark, Transformer
 
-from avail.classes import TimeSpan, Attendee
+from find_time.classes import TimeSpan, Person
 
 _AVAIL_GRAMMAR = r"""
 
@@ -93,14 +93,10 @@ class _AvailFileTransformer(Transformer):
         return hour + ":" + minute
 
 
-def load_file(path: Union[str, Path]) -> List[Attendee]:
-    if isinstance(path, str):
-        path = Path(path)
-
+def parse(value: str) -> List[Person]:
     # read and parse file
     parser = Lark(_AVAIL_GRAMMAR, start='start')
-    with path.open() as f:
-        parsed = parser.parse(f.read())
+    parsed = parser.parse(value)
     parsed = _AvailFileTransformer().transform(parsed)
 
     # convert parsed entries to attendees
@@ -109,7 +105,7 @@ def load_file(path: Union[str, Path]) -> List[Attendee]:
         if name in attendees.keys():
             attendee = attendees[name]
         else:
-            attendee = Attendee(name)
+            attendee = Person(name)
             attendees[name] = attendee
 
         # iterate over each availability span
@@ -117,3 +113,14 @@ def load_file(path: Union[str, Path]) -> List[Attendee]:
             attendee.add_availability(ts)
 
     return list(attendees.values())
+
+
+def load(path: Union[str, Path]) -> List[Person]:
+    if isinstance(path, str):
+        path = Path(path)
+
+    # read and parse file
+    with path.open() as f:
+        parsed = parse(f.read())
+
+    return parsed
