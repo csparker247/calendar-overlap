@@ -11,7 +11,37 @@ sorting = {
     'length<': partial(sorted, key=lambda x: x.time.end - x.time.start),
     'length>': partial(sorted, key=lambda x: x.time.end - x.time.start,
                        reverse=True),
+    'start<': partial(sorted,
+                      key=lambda x: x.time.day.value * 24 + x.time.start),
+    'start>': partial(sorted,
+                      key=lambda x: x.time.day.value * 24 + x.time.start,
+                      reverse=True),
 }
+
+filters = {
+    'minh': lambda x, m: x.time.end - x.time.start >= m,
+    'maxh': lambda x, m: x.time.end - x.time.start <= m,
+}
+
+
+def event_filter(s: str):
+    if s.lower() == 'none':
+        return lambda x: True
+
+    key, _, val = s.partition('=')
+    fn = partial(filters.get(key), m=float(val))
+    return fn
+
+
+def build_filter(filter_list):
+    def apply_filter(x):
+        for f in filter_list:
+            fn = event_filter(f)
+            if not fn(x):
+                return False
+        return True
+
+    return apply_filter
 
 
 def main():
@@ -26,6 +56,9 @@ def main():
                              'Sorting will be applied in order of appearance. '
                              "Options: 'none', 'available<', 'available>', "
                              "'length<', 'length>'.")
+    parser.add_argument('--filter', nargs='+', default=['none'], metavar='FN',
+                        help='Filter time blocks. Options: '
+                             "'none', 'minh', 'maxh'")
     parser.add_argument('--days', nargs='+', type=str, metavar='D',
                         default=['M', 'T', 'W', 'R', 'F'],
                         help='Days of the week to evaluate. One or more of: '
@@ -62,6 +95,9 @@ def main():
     for sort_type in args.sort:
         blocks = sorting[sort_type](blocks)
 
+    # construct filter functions
+    apply_filter = build_filter(args.filter)
+
     # print all blocks
     if args.nprint < 0:
         args.nprint = None
@@ -69,9 +105,17 @@ def main():
     # print time blocks
     # idx != enumerate index
     idx = 0
-    for block in blocks[:args.nprint]:
+    for block in blocks:
+        # we've printed the limit
+        if args.nprint is not None and idx >= args.nprint:
+            break
+
         # skip empty as requested
         if not args.show_empty and block.num_available == 0:
+            continue
+
+        # skip values which don't pass the filter
+        if not apply_filter(block):
             continue
 
         idx += 1
