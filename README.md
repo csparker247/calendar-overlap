@@ -1,6 +1,13 @@
 # find-time
 A simple tool for finding regular availability overlaps between event invitees.
 
+## Usage
+```shell
+python -m pip install find-time
+
+find-time --help
+```
+
 ## Availability file format
 
 The following format is supported by `find_time.parse`:

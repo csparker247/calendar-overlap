@@ -9,32 +9,38 @@ sorting = {
     'available<': partial(sorted, key=lambda x: x.num_available),
     'available>': partial(sorted, key=lambda x: x.num_available, reverse=True),
     'length<': partial(sorted, key=lambda x: x.time.end - x.time.start),
-    'length>': partial(sorted, key=lambda x: x.time.end - x.time.start, reverse=True),
+    'length>': partial(sorted, key=lambda x: x.time.end - x.time.start,
+                       reverse=True),
 }
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', required=True,
+    parser.add_argument('-i', '--input', required=True, metavar='PATH',
                         help='path to availability file')
-    parser.add_argument('-s', '--sort', nargs='+', choices=sorting.keys(),
+    parser.add_argument('--sort', nargs='+', choices=sorting.keys(),
                         type=str.lower, default=['available>'],
-                        help='sort availability blocks by the provided '
-                             'function. can be specified multiple times')
-    parser.add_argument('--days', nargs='+', type=str,
-                        default=['M','T','W','R','F'],
+                        metavar='FN',
+                        help='Sort availability blocks by the provided '
+                             'function. Can be specified multiple times. '
+                             'Sorting will be applied in order of appearance. '
+                             "Options: 'none', 'available<', 'available>', "
+                             "'length<', 'length>'.")
+    parser.add_argument('--days', nargs='+', type=str, metavar='D',
+                        default=['M', 'T', 'W', 'R', 'F'],
                         help='Days of the week to evaluate. One or more of: '
-                             'Su, M, T, W, R, F, Sa')
+                             "'Su', 'M', 'T', 'W', 'R', 'F', 'Sa'")
     parser.add_argument('--hours', nargs=2, type=int, default=[8, 17],
+                        metavar=('START', 'END'),
                         help='Start and end hours to evaluate, in 24hr time.')
-    parser.add_argument('--blocks-per-hour', type=int, default=4,
+    parser.add_argument('--blocks-per-hour', type=int, default=4, metavar='N',
                         help='Number of time blocks-per-hour to check')
     parser.add_argument('--merge', action=argparse.BooleanOptionalAction,
                         default=True, help='merge adjacent time blocks')
     parser.add_argument('--show-empty', action=argparse.BooleanOptionalAction,
                         default=False,
                         help='show time blocks with no availability')
-    parser.add_argument('--nprint', type=int, default=10,
+    parser.add_argument('--nprint', type=int, default=10, metavar='N',
                         help='Number of results to print. If < 0, print all.')
     args = parser.parse_args()
 
