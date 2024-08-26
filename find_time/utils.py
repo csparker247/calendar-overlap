@@ -8,7 +8,7 @@ def print_avail(attendees: Union[Person, Iterable[Person]]):
         attendees = (attendees,)
     for person in attendees:
         print(f'{person.name}:')
-        for day_spans in person.availability().values():
+        for day_spans in person.availability_by_day():
             if len(day_spans) == 0:
                 continue
             day = day_spans[0].day
