@@ -53,6 +53,9 @@ _NL: /(\r?\n[\t ]*)+/
 
 
 class _AvailFileTransformer(Transformer):
+    def start(self, start):
+        return start
+
     def entry(self, entry):
         name, availability = entry
         availability = [TimeSpan(*a) for a in availability]
@@ -98,10 +101,12 @@ def parse(value: str) -> List[Person]:
     parser = Lark(_AVAIL_GRAMMAR, start='start')
     parsed = parser.parse(value)
     parsed = _AvailFileTransformer().transform(parsed)
+    if isinstance(parsed, tuple):
+        parsed = [parsed]
 
     # convert parsed entries to attendees
     attendees = {}
-    for name, availability in parsed.children:
+    for name, availability in parsed:
         if name in attendees.keys():
             attendee = attendees[name]
         else:
